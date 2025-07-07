@@ -12,8 +12,8 @@ public class HelloController {
     public Sample hello()
     {
         Sample sample = new Sample();
-        sample.setId(100);
-        sample.setName("taro");
+        sample.setId(1234);
+        sample.setName("nemoto");
 
         return sample;
     }
