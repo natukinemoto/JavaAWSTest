@@ -1,0 +1,61 @@
+name: Deploy to EC2
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Get GitHub Actions IP ranges
+        id: get_ips
+        run: |
+          IPS=$(curl -s https://api.github.com/meta | jq -r '.actions[]')
+          echo "IPS<<EOF" >> $GITHUB_ENV
+          echo "$IPS" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+
+      - name: Authorize GitHub Actions IPs in Security Group
+        run: |
+          for ip in $IPS; do
+            aws ec2 authorize-security-group-ingress \
+              --group-id ${{ secrets.SECURITY_GROUP_ID }} \
+              --protocol tcp \
+              --port ${{ secrets.PORT }} \
+              --cidr $ip || true
+          done
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ec2-user
+          key: ${{ secrets.EC2_KEY }}
+          script: |
+            docker pull your/image:latest
+            docker stop my-spring-app || true
+            docker rm my-spring-app || true
+            docker run -d -p 8080:8080 --name my-spring-app your/image:latest
+
+      - name: Revoke GitHub Actions IPs from Security Group
+        if: always()
+        run: |
+          for ip in $IPS; do
+            aws ec2 revoke-security-group-ingress \
+              --group-id ${{ secrets.SECURITY_GROUP_ID }} \
+              --protocol tcp \
+              --port ${{ secrets.PORT }} \
+              --cidr $ip || true
+          done
