@@ -23,7 +23,7 @@ jobs:
         run: mvn clean package
 
       - name: Build Docker image
-        run: docker build -t my-spring-app .
+        run: docker build -t natukinemoto/my-spring-app:latest .
 
       - name: Push Docker image to Docker Hub
         uses: docker/login-action@v2
@@ -32,7 +32,7 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Push image
-        run: docker push my-dockerhub-username/my-spring-app:latest
+        run: docker push natukinemoto/my-spring-app:latest
 
       - name: SSH to EC2 and deploy
         uses: appleboy/ssh-action@v0.1.7
@@ -41,7 +41,7 @@ jobs:
           username: ec2-user
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            docker pull my-dockerhub-username/my-spring-app:latest
+            docker pull natukinemoto/my-spring-app:latest
             docker stop my-spring-app || true
             docker rm my-spring-app || true
-            docker run -d -p 8080:8080 --name my-spring-app my-dockerhub-username/my-spring-app:latest
+            docker run -d -p 8080:8080 --name my-spring-app natukinemoto/my-spring-app:latest
