@@ -27,8 +27,8 @@ public class SpringBootDemoApplicationTests {
 
         // 結果を検証するためのクラスを生成して、期待値をセット
         Sample sample = new Sample();
-        sample.setId(100);
-        sample.setName("taro");
+        sample.setId(1234);
+        sample.setName("nemoto");
 
         // 「/hello」パスのAPIを実行してレスポンスを検証
         this.mockMvc.perform(MockMvcRequestBuilders.get("/hello"))
