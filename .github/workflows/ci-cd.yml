@@ -44,4 +44,7 @@ jobs:
             docker pull natukinemoto/my-spring-app:latest
             docker stop my-spring-app || true
             docker rm my-spring-app || true
-            docker run -d -p 8080:8080 --name my-spring-app natukinemoto/my-spring-app:latest
+            docker run -d -p 8080:8080 --name my-spring-app \
+              -e OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }} \
+              -e OPENWEATHERMAP_API_KEY=${{ secrets.OPENWEATHERMAP_API_KEY }} \
+              natukinemoto/my-spring-app:latest
